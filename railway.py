@@ -21,9 +21,14 @@ CLASS_IDS = {
     "person": 0       # COCO class ID for person
 }
 
-# Function to generate a detailed description using Gemini AI
-def generate_detailed_description(detected_objects):
-    prompt = f"Generate a detailed description of the following situation: {detected_objects}"
+# Function to generate a detailed safety-focused description using Gemini AI
+def generate_safety_description(detected_objects):
+    prompt = (
+        f"The following objects were detected at a railway crossing: {detected_objects}. "
+        "Provide a detailed analysis of the situation, focusing on potential safety risks, "
+        "accident prevention measures, and technical details. Include recommendations for "
+        "improving safety and preventing accidents."
+    )
     response = gemini_model.generate_content(prompt)
     return response.text
 
@@ -66,18 +71,18 @@ def process_frame(frame):
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-    # Generate detailed description of the situation
-    detailed_description = None
+    # Generate detailed safety-focused description of the situation
+    safety_description = None
     if detected_objects:
         situation = " ".join(detected_objects)
-        detailed_description = generate_detailed_description(situation)
+        safety_description = generate_safety_description(situation)
 
-    return frame, detailed_description
+    return frame, safety_description
 
 # Streamlit app
 def main():
     st.title("🚦 Railway Crossing Safety System")
-    st.write("This app detects trains, vehicles, and pedestrians at railway crossings and generates detailed safety warnings.")
+    st.write("This app detects trains, vehicles, and pedestrians at railway crossings and provides detailed safety analysis.")
 
     # Upload image or video
     input_type = st.radio("Select input type:", ["Image", "Video"])
@@ -90,15 +95,15 @@ def main():
             frame = cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
 
             # Process the image
-            processed_frame, detailed_description = process_frame(frame)
+            processed_frame, safety_description = process_frame(frame)
 
             # Display the processed image
             st.image(processed_frame, channels="BGR", caption="Processed Image", use_column_width=True)
 
-            # Display the detailed description
-            if detailed_description:
-                st.subheader("Detailed Situation Description")
-                st.write(detailed_description)
+            # Display the safety-focused description
+            if safety_description:
+                st.subheader("Detailed Safety Analysis")
+                st.write(safety_description)
             else:
                 st.info("No objects detected.")
 
@@ -119,7 +124,7 @@ def main():
 
             # Display the video with detections
             stframe = st.empty()
-            detailed_description = None
+            safety_description = None
 
             while cap.isOpened():
                 ret, frame = cap.read()
@@ -129,9 +134,9 @@ def main():
                 # Process the frame
                 processed_frame, current_description = process_frame(frame)
 
-                # Update the detailed description if a new one is generated
+                # Update the safety-focused description if a new one is generated
                 if current_description:
-                    detailed_description = current_description
+                    safety_description = current_description
 
                 # Display the processed frame
                 stframe.image(processed_frame, channels="BGR", use_column_width=True)
@@ -139,10 +144,10 @@ def main():
             cap.release()
             os.remove(video_path)  # Clean up the temporary file
 
-            # Display the final detailed description after the video ends
-            if detailed_description:
-                st.subheader("Detailed Situation Description")
-                st.write(detailed_description)
+            # Display the final safety-focused description after the video ends
+            if safety_description:
+                st.subheader("Detailed Safety Analysis")
+                st.write(safety_description)
             else:
                 st.info("No objects detected.")
 
