@@ -4,6 +4,7 @@ import cv2
 import google.generativeai as genai
 import tempfile
 import os
+import numpy as np
 
 # Configure Gemini AI
 API_KEY = "AIzaSyA-9-lTQTWdNM43YdOXMQwGKDy0SrMwo6c"  # Replace with your Gemini API key
