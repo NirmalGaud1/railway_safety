@@ -55,20 +55,18 @@ def process_frame(frame):
                     vehicles_or_pedestrians_on_tracks = True
 
     # Generate warning messages based on detections
+    warning_message = None
     if train_detected and vehicles_or_pedestrians_on_tracks:
         situation = "A train is approaching, and vehicles or pedestrians are on the tracks."
         warning_message = generate_warning_message(situation)
-        cv2.putText(frame, warning_message, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
     elif train_detected:
         situation = "A train is approaching the railway crossing."
         warning_message = generate_warning_message(situation)
-        cv2.putText(frame, warning_message, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
     elif vehicles_or_pedestrians_on_tracks:
         situation = "Vehicles or pedestrians are detected on the railway tracks."
         warning_message = generate_warning_message(situation)
-        cv2.putText(frame, warning_message, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-    return frame
+    return frame, warning_message
 
 # Streamlit app
 def main():
@@ -86,10 +84,14 @@ def main():
             frame = cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
 
             # Process the image
-            processed_frame = process_frame(frame)
+            processed_frame, warning_message = process_frame(frame)
 
             # Display the processed image
             st.image(processed_frame, channels="BGR", caption="Processed Image", use_column_width=True)
+
+            # Display the warning message separately
+            if warning_message:
+                st.warning(warning_message)
 
     elif input_type == "Video":
         uploaded_file = st.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
@@ -108,19 +110,29 @@ def main():
 
             # Display the video with detections
             stframe = st.empty()
+            warning_message = None
+
             while cap.isOpened():
                 ret, frame = cap.read()
                 if not ret:
                     break
 
                 # Process the frame
-                processed_frame = process_frame(frame)
+                processed_frame, current_warning_message = process_frame(frame)
+
+                # Update the warning message if a new one is generated
+                if current_warning_message:
+                    warning_message = current_warning_message
 
                 # Display the processed frame
                 stframe.image(processed_frame, channels="BGR", use_column_width=True)
 
             cap.release()
             os.remove(video_path)  # Clean up the temporary file
+
+            # Display the final warning message after the video ends
+            if warning_message:
+                st.warning(warning_message)
 
 # Run the app
 if __name__ == "__main__":
