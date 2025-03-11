@@ -30,7 +30,7 @@ def generate_warning_message(situation):
 # Function to process an image or video frame
 def process_frame(frame):
     # Perform object detection on the frame
-    results = model.predict(frame, conf=0.5)  # Detect objects with confidence >= 50%
+    results = model.predict(frame, conf=0.3)  # Lower confidence threshold
 
     # Initialize flags for safety logic
     train_detected = False
@@ -41,6 +41,9 @@ def process_frame(frame):
         for box in result.boxes:
             class_id = int(box.cls)  # Get class ID of detected object
             confidence = float(box.conf)  # Get confidence score
+
+            # Debug: Print detected objects
+            print(f"Detected object: Class ID = {class_id}, Confidence = {confidence}")
 
             # Check if a train is detected
             if class_id == CLASS_IDS["train"]:
@@ -92,6 +95,8 @@ def main():
             # Display the warning message separately
             if warning_message:
                 st.warning(warning_message)
+            else:
+                st.info("No objects detected.")
 
     elif input_type == "Video":
         uploaded_file = st.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
@@ -133,6 +138,8 @@ def main():
             # Display the final warning message after the video ends
             if warning_message:
                 st.warning(warning_message)
+            else:
+                st.info("No objects detected.")
 
 # Run the app
 if __name__ == "__main__":
