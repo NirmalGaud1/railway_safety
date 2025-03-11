@@ -1,5 +1,5 @@
-streamlit 
-ultralytics 
-opencv-python 
-google-generativeai 
+opencv-python-headless
+ultralytics
+google-generativeai
 numpy
+streamlit
